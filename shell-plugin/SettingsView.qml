@@ -268,12 +268,18 @@ Column {
     }
     // Any other client: the URL its events live at ({nevent} placeholders
     // allowed). Empty when a pill is selected.
-    TextField {
+    Field {
       width: parent.width - parent.leftPadding
       placeholderText: "Custom client URL (https://…/e/ or ?open={nevent})"
-      text: {
-        var c = parent.n.client || ""
-        return c.indexOf("/") !== -1 ? c : ""
+      // Not bound directly to text: a live binding would wipe in-progress
+      // typing whenever the config refreshes for an unrelated change. Set
+      // once on load, and update only when the stored client itself changes
+      // (picking a pill clears the field; entering a URL saves it).
+      readonly property string storedClient: parent.n.client || ""
+      onStoredClientChanged: text = storedClient.indexOf("/") !== -1 ? storedClient : ""
+      Component.onCompleted: {
+        if (storedClient.indexOf("/") !== -1)
+          text = storedClient
       }
       foreground: root.foreground
       onAccepted: {
